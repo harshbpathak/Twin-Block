@@ -11,7 +11,17 @@ Built for the Qloo Agentic Hackathon. MIT licensed. No npm dependencies (Node 20
 3. **It maps where that taste lives in the next city**: a neighbourhood-level Qloo heatmap.
 4. **It checks the top 3 areas**: three anchor neighbours each, price fit against nearby places, crowding (same-category places within 800 m), shared taste between your crowd and the area, and whether the area is rising or fading.
 5. **You get a one-page Lease Brief** for each area, with evidence chips, a visible scoring formula, what to check before signing, and what the data does *not* establish.
-6. **Without Qloo panel**: what "just go where it's busy" (and, optionally, a plain LLM) would have picked instead.
+6. **Without Qloo panel**: what "just go where it's busy" (and, optionally, a plain LLM) would have picked instead. A map toggle recolours the same map by busy-ness alone, so you can see the difference.
+
+More:
+- **City finder**: leave the next city blank and Qloo ranks the localities where your crowd over-indexes. Click one to map it.
+- **Gap finder**: the agent checks whether the best area already serves what your crowd loves. If few places nearby do, it flags an opening.
+- **Agent's note**: a plain-English summary where every sentence cites its receipts.
+- **Stability check**: does the #1 pick survive at 30%, 50%, 70% and 90% taste weight? The pick is labelled "Stable" or "Exploratory".
+- **Adaptive agent**: when a filter empties the results (vibe words, price level, neighbourhood boundaries), the agent relaxes it and says so in the trace, then labels the result "reduced confidence".
+- **Visit plan**: a half-day scouting route with map links and what to look for. **Landlord pitch**: a first email to a leasing agent, built only from the evidence.
+- **Shareable links**: the URL re-runs the search. **Saved blocks** are kept in your browser. Receipts can be downloaded as JSON.
+- **MCP server** (`npm run mcp`) exposes `twin_block_find` and `twin_block_prove` to any MCP agent (Claude, Codex, Cursor).
 
 ### Prove it: a non-circular real-store backtest
 
@@ -54,7 +64,7 @@ The backtest also uses `filter.references_brand` to get real store lists and `fi
 - **Status labels everywhere**: `ok`, `empty` (no Qloo signal), `needs_input`, `partial`, `degraded` (reduced confidence), `error`. Missing data is shown as missing, never invented.
 - **Streaming agent steps** (NDJSON) so you see each tool call happen.
 - **Recorded fallback**: `npm run record` saves each preset's live run; if Qloo is down, presets load the recording, clearly labelled with its date.
-- **Tests**: `npm test` runs 25 tests against a mock Qloo. They cover the PII guard, cache, budget, error labels, all 10 tools, the end-to-end pipeline, the ambiguous-shop flow, heatmap failure, scoring, the backtest leakage guard, server security headers, path traversal and basic accessibility checks.
+- **Tests**: `npm test` runs 30 tests against a mock Qloo. They cover the PII guard, cache, budget, error labels, all 10 tools, the end-to-end pipeline, the ambiguous-shop flow, heatmap failure, the city finder, the gap finder, adaptive decisions, scoring, the backtest leakage guard, the MCP server, server security headers, path traversal and basic accessibility checks.
 - Security headers and a CSP. Basic rate limiting.
 
 ## Run it
@@ -66,11 +76,16 @@ npm run dev               # http://127.0.0.1:4173
 npm test
 npm run prove             # live backtest for data/chains.json -> data/backtest-results.json
 npm run record            # record presets for the offline fallback
+npm run mcp               # Twin Block as an MCP tool server (stdio)
+
+# No key yet? Click through the UI against a fake local Qloo (dev only, not real data):
+npm run dev:mock &        # fake Qloo on :4999
+QLOO_API_KEY=dev QLOO_BASE_URL=http://127.0.0.1:4999 npm start
 ```
 
 ## Deploy
 
-- **Render**: connect the repo. `render.yaml` is included. Set `QLOO_API_KEY` as a secret.
+- **Render**: New → Blueprint → pick this repo. `render.yaml` is included. Paste `QLOO_API_KEY` when asked. The health check is `/api/health`.
 - **Cloud Run / Fly**: a `Dockerfile` is included. It listens on `$PORT`.
 
 ## What this does NOT establish
