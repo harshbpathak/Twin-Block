@@ -213,7 +213,9 @@ function areaCard(a, i) {
     h('div', { class: 'card-actions' },
       h('button', { class: 'btn small dark', type: 'button', onclick: () => brief(a) }, 'Lease Brief ↗'),
       h('button', { class: 'btn small', type: 'button', onclick: () => visitPlan(a) }, '🚶 Visit plan'),
-      h('button', { class: 'btn small', type: 'button', onclick: () => focusArea(a) }, '◎ Show on map'),
+      h('button', { class: 'btn small', type: 'button', onclick: () => landlordPitch(a) }, '✉ Landlord pitch'),
+      h('button', { class: 'btn small', type: 'button', onclick: () => focusArea(a) }, '◎ Map'),
+      h('button', { class: 'btn small', type: 'button', 'aria-pressed': String(isSaved(a)), onclick: e => { toggleSave(a); e.currentTarget.setAttribute('aria-pressed', String(isSaved(a))); e.currentTarget.textContent = isSaved(a) ? '★ Saved' : '☆ Save'; } }, isSaved(a) ? '★ Saved' : '☆ Save'),
       h('span', { class: 'receipts' }, `receipts ${uniq(a.receipts).slice(0, 6).join(' ')}`)));
 }
 
@@ -313,6 +315,53 @@ function visitPlan(a) {
     sec('Competitors to look at', h('p', {}, a.sameCategory.length ? a.sameCategory.join(' · ') : 'Qloo returned no same-category places nearby.')),
     sec('Questions for the broker', h('ul', {}, h('li', {}, 'Which units near the anchors are coming available in the next 6 months?'), h('li', {}, 'Asking rent per sq ft and typical tenant improvement allowance?'), h('li', {}, 'Is my use permitted (hours, alcohol, venting, music)?'))));
 }
+function landlordPitch(a) {
+  const r = state.result;
+  const shared = (a.shared || []).slice(0, 3).map(t => t.name);
+  const dna = r.dna.tags.slice(0, 3).map(t => t.name);
+  const lines = [
+    `Hello,`,
+    '',
+    `I run ${r.shop.name} in ${r.input.homeCity} and I'm looking for space in ${a.name}, ${r.input.targetCity}${a.anchors[0] ? `, ideally near ${a.anchors[0].name}` : ''}.`,
+    '',
+    `Why this block: our customers' tastes overlap with the people who already come here.${shared.length ? ` Qloo's taste data shows our crowd and this area share an interest in ${shared.join(', ')}.` : ''}${dna.length ? ` Our regulars over-index on ${dna.join(', ')}.` : ''}`,
+    a.anchors.length ? `We'd complement your current neighbours (${a.anchors.map(x => x.name).join(', ')}) rather than compete with them.` : '',
+    '',
+    `Could you share units coming available in the next 6 months, asking rent, and whether our use is permitted?`,
+    '',
+    `Thank you,`,
+    `[Your name]`,
+  ].filter((l, i, arr) => l !== '' || arr[i - 1] !== '');
+  const text = lines.join(String.fromCharCode(10));
+  openDialog(
+    h('div', { class: 'eyebrow' }, 'TWIN BLOCK · LANDLORD PITCH'),
+    h('h1', { id: 'dialogTitle' }, `Pitch for ${a.name}`),
+    h('p', { class: 'sub' }, 'A first email to a leasing agent, built only from the evidence above. Edit before sending.'),
+    h('textarea', { id: 'pitchText', 'aria-label': 'Pitch email text', rows: 16, style: 'width:100%;font:13px/1.6 var(--body);padding:14px;border:1px solid var(--line);border-radius:10px' }, text),
+    h('div', { class: 'dialog-actions' }, h('button', { class: 'btn dark', type: 'button', onclick: async () => { try { await navigator.clipboard.writeText($('#pitchText').value); toast('Pitch copied.'); } catch { toast('Select the text and copy it.'); } } }, 'Copy text')));
+}
+
+/* ---------- saved blocks (this browser only) ---------- */
+const SAVE_KEY = 'twinblock.saved.v1';
+function loadSaved() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch { return []; } }
+function storeSaved(list) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(list.slice(0, 20))); } catch {} renderSaved(); }
+const saveId = a => `${state.result?.shop?.id}|${state.result?.input?.targetCity}|${a.name}`;
+function isSaved(a) { return loadSaved().some(x => x.id === saveId(a)); }
+function toggleSave(a) {
+  const list = loadSaved(); const id = saveId(a);
+  if (list.some(x => x.id === id)) return storeSaved(list.filter(x => x.id !== id));
+  const r = state.result;
+  storeSaved([{ id, shop: r.shop.name, from: r.input.homeCity, city: r.input.targetCity, name: a.name, score: a.score, taste: a.cell.tastePct, crowd: a.sameCategoryCount, link: location.hash, at: Date.now() }, ...list]);
+  toast(`Saved ${a.name}.`);
+}
+function renderSaved() {
+  const list = loadSaved();
+  $('#saved').hidden = !list.length;
+  $('#savedList').replaceChildren(...list.map(x => h('li', {},
+    h('a', { href: x.link || '#', onclick: () => setTimeout(() => location.reload(), 0) }, h('b', {}, `${x.name}, ${x.city}`), h('span', {}, `${x.shop} · score ${x.score} · taste ${x.taste} · ${x.crowd} similar nearby`)),
+    h('button', { type: 'button', class: 'x', 'aria-label': `Remove ${x.name}`, onclick: () => storeSaved(loadSaved().filter(y => y.id !== x.id)) }, '×'))));
+}
+
 $('#closeDialog').addEventListener('click', () => $('#dialog').close());
 $('#printDialog').addEventListener('click', () => window.print());
 
@@ -377,6 +426,7 @@ $('#runImport').addEventListener('click', async () => {
 /* ---------- wire up ---------- */
 $('#form').addEventListener('submit', e => { e.preventDefault(); find(); });
 $('#weight').addEventListener('input', () => { $('#weightValue').textContent = `${$('#weight').value}% taste`; rescore(); });
+renderSaved();
 await Promise.all([loadHealth(), loadPresets()]);
 // Shared link: #shop=..&homeCity=..&targetCity=.. re-runs the search.
 if (location.hash.length > 1) {
