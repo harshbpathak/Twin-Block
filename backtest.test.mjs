@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { runBacktest, distanceMeters } from './backtest.mjs';
+const fixture = () => ({ cells: [{id:'a',lat:0,lon:0,tasteScore:2,busyScore:1},{id:'b',lat:1,lon:1,tasteScore:1,busyScore:2}], trainingLocations:[{id:'train',lat:2,lon:2}], heldOutLocations:[{id:'test',lat:0,lon:0}], scoreSourceIds:['train'], k:1, randomTrials:50 });
+test('known spatial result and independently ranked baseline', () => { const r=runBacktest(fixture()); assert.equal(r.taste.precisionAtK,1); assert.equal(r.busy.precisionAtK,0); assert.equal(r.taste.heldOutCoverage,1); assert.equal(r.llm,undefined); });
+test('random baseline is reproducible and nonconstant', () => { const a=runBacktest(fixture()),b=runBacktest(fixture()); assert.deepEqual(a.random,b.random); assert.ok(a.random.meanPrecisionAtK>0 && a.random.meanPrecisionAtK<1); });
+test('rejects ID, location and declared score leakage', () => { for (const change of [{heldOutLocations:[{id:'train',lat:3,lon:3}]},{heldOutLocations:[{id:'x',lat:2,lon:2}]},{scoreSourceIds:['test']}]) assert.throws(()=>runBacktest({...fixture(),...change}),/leakage|training locations/); });
+test('requires real nonempty evaluation data and valid candidates', () => { assert.throws(()=>runBacktest({...fixture(),heldOutLocations:[]}),/nonempty/); assert.throws(()=>runBacktest({...fixture(),k:3}),/k must/); assert.throws(()=>runBacktest({...fixture(),llmRanking:['missing']}),/LLM/); });
+test('supplied LLM baseline evaluated without fabricating ranking', () => { assert.equal(runBacktest({...fixture(),llmRanking:['b']}).llm.precisionAtK,0); });
+test('distance handles dateline and expected scale', () => { assert.ok(distanceMeters({lat:0,lon:179.999},{lat:0,lon:-179.999})<225); assert.equal(distanceMeters({lat:0,lon:0},{lat:0,lon:0}),0); });

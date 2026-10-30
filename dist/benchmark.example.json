@@ -1,0 +1,1 @@
+{"description":"INPUT TEMPLATE ONLY. Replace empty arrays with real independently sourced data. tasteScore must be built without target-chain store locations. busyScore requires an independent traffic proxy. This template intentionally cannot run.","cells":[],"trainingLocations":[],"heldOutLocations":[],"scoreSourceIds":[],"k":5,"hitRadiusMeters":250,"seed":42,"randomTrials":200}
