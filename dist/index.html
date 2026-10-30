@@ -5,37 +5,60 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Twin Block · Find your next neighbourhood</title>
 <meta name="description" content="Your shop works in one city. Twin Block finds the neighbourhoods in a new city where the same crowd already lives, using Qloo's taste graph, and proves the method on real chain stores.">
+<meta name="theme-color" content="#16332a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Crect width='9' height='9' rx='2' fill='%23225542'/%3E%3Crect x='11' width='9' height='9' rx='2' fill='%23225542'/%3E%3Crect y='11' width='9' height='9' rx='2' fill='%23225542'/%3E%3Crect x='11' y='11' width='9' height='9' rx='2' fill='%23d8ec8f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header>
-  <a class="logo" href="#">▦ twin block<span>TASTE-FIRST SITE SELECTION</span></a>
-  <nav aria-label="Views">
+  <a class="logo" href="#" aria-label="Twin Block home"><i aria-hidden="true"><b></b><b></b><b></b><b></b></i><span>twin block<small>TASTE-FIRST SITE SELECTION</small></span></a>
+  <nav class="views" aria-label="Views">
     <button class="tab active" data-view="explore" aria-pressed="true">Find my twin</button>
     <button class="tab" data-view="proof" aria-pressed="false">Prove it</button>
     <button class="tab" data-view="receipts" aria-pressed="false">Receipts</button>
   </nav>
-  <span class="status" id="health" role="status">● checking Qloo…</span>
+  <span class="status" id="health" role="status">● Checking Qloo…</span>
 </header>
+
 <main id="main">
-  <section class="intro" id="intro">
-    <div class="eyebrow">A NEW CITY. THE SAME CROWD.</div>
-    <h1>Your next great spot<br>already has a twin.</h1>
-    <p>Tell us the shop that works. We find where the same crowd lives in your next city:<br>taste first, crowding in view, and a receipt for every claim.</p>
+  <section class="hero" id="intro">
+    <div>
+      <div class="eyebrow">A NEW CITY. THE SAME CROWD.</div>
+      <h1>Your next great spot already has a <em>twin</em>.</h1>
+      <p>Tell us the shop that works. Twin Block reads its crowd on Qloo's taste graph and maps where that same crowd lives in your next city. Crowding, price fit and momentum are in view, with a receipt for every claim.</p>
+      <div class="cta-row">
+        <button class="btn dark" id="ctaDemo" type="button">▶ Try a live example</button>
+        <button class="btn" type="button" data-goto="proof">See the proof →</button>
+      </div>
+    </div>
+    <div class="how">
+      <h2>How the agent works</h2>
+      <ol>
+        <li><span>1</span><div><b>Reads your crowd</b><small>Taste DNA, age skew and the places back home that share your customers.</small></div></li>
+        <li><span>2</span><div><b>Maps the new city</b><small>A neighbourhood heatmap of where that taste over-indexes.</small></div></li>
+        <li><span>3</span><div><b>Checks every shortlisted block</b><small>Anchor neighbours, price fit, competitors within 800 m, audience overlap, trend.</small></div></li>
+        <li><span>4</span><div><b>Hands you a Lease Brief</b><small>One page, every number cited, plus what the data can't tell you.</small></div></li>
+      </ol>
+      <div class="proofline" id="heroProof">Built to be tested: hide a real chain's stores, find them from taste alone · <a href="#" data-goto="proof" style="color:inherit">see the method</a></div>
+    </div>
   </section>
 
   <section id="explore">
     <div class="workspace">
       <aside>
         <h2>Where are we taking you?</h2>
+        <p class="hint" style="margin:0">Start from a shop that's already working.</p>
         <form id="form" novalidate>
           <label for="shop">The shop that works</label>
           <input id="shop" name="shop" maxlength="100" placeholder="e.g. Veracruz All Natural" autocomplete="off" required>
           <div class="pair">
             <div><label for="homeCity">Its city</label><input id="homeCity" name="homeCity" maxlength="80" placeholder="Austin" required></div>
-            <div><label for="targetCity">Next city</label><input id="targetCity" name="targetCity" maxlength="80" placeholder="Denver" required></div>
+            <div><label for="targetCity">Next city <small>(blank = suggest)</small></label><input id="targetCity" name="targetCity" maxlength="80" placeholder="Denver"></div>
           </div>
           <label for="price">Your price level</label>
           <select id="price" name="price">
@@ -48,50 +71,62 @@
           <label for="vibes">Vibe words <small>(optional)</small></label>
           <input id="vibes" name="vibes" maxlength="120" placeholder="late-night, family-friendly">
           <label for="weight">Taste vs. room to grow <output id="weightValue" for="weight">70% taste</output></label>
-          <input type="range" id="weight" name="weight" min="0" max="100" value="70">
-          <p class="hint">Business names and places only. Nothing personal is sent to Qloo: emails, phone numbers and personal details are blocked.</p>
+          <input type="range" id="weight" name="weight" min="0" max="100" step="5" value="70">
+          <p class="hint">Business names and places only. Emails, phone numbers and personal details are blocked before anything reaches Qloo.</p>
           <p class="error" id="formError" role="alert" hidden></p>
           <button class="primary" id="find" type="submit">Find my twin blocks →</button>
         </form>
         <div class="presets"><small>TRY ONE</small><div id="presets"></div></div>
       </aside>
+
       <div class="results" aria-live="polite">
-        <ol class="steps" id="steps" aria-label="What the agent is doing"></ol>
-        <div id="confirm" hidden></div>
-        <div class="result-head" id="resultHead" hidden>
-          <div><span class="eyebrow">YOUR SHORTLIST</span><h2 id="resultTitle"></h2></div>
-          <span class="chip" id="modeChip"></span>
+        <details class="trace" id="trace" open hidden><summary>Agent trace <small id="traceSummary"></small></summary><ol class="steps" id="steps"></ol></details>
+        <div id="pick" class="pick" hidden></div>
+        <div id="resultBlock" hidden>
+          <div class="result-head">
+            <div><span class="eyebrow">YOUR SHORTLIST</span><h2 id="resultTitle"></h2></div>
+            <div class="head-actions">
+              <span class="chip" id="modeChip"></span><span class="chip" id="stableChip"></span>
+              <button class="btn small" id="shareBtn" type="button">🔗 Copy link</button>
+              <button class="btn small" id="receiptsBtn" type="button">⤓ Receipts</button>
+            </div>
+          </div>
+          <div class="note" id="note"></div>
+          <div id="map" class="map" role="img" aria-label="Map of taste affinity in the target city"></div>
+          <div class="legend"><span><i class="dot hot"></i>strong taste match</span><span><i class="dot mid"></i>medium</span><span><i class="dot cool"></i>weak</span><span><i class="dot pinx"></i>your shortlist</span><span><i class="dot busy"></i>busiest areas (no taste signal)</span></div>
+          <div id="cards"></div>
+          <div class="panels">
+            <article class="panel" id="dnaPanel"></article>
+            <article class="panel dark" id="withoutPanel"></article>
+            <article class="panel" id="citiesPanel"></article>
+          </div>
+          <ul class="disclosures" id="disclosures"></ul>
         </div>
-        <div id="map" class="map" hidden role="img" aria-label="Map of taste affinity in the target city"></div>
-        <p class="legend" id="legend" hidden><span class="dot hot"></span> strong taste match <span class="dot cool"></span> weaker <span class="dot busy"></span> busiest areas (no taste)</p>
-        <div id="cards"></div>
-        <div class="panels" id="panels" hidden>
-          <article class="panel" id="dnaPanel"></article>
-          <article class="panel" id="withoutPanel"></article>
-        </div>
-        <ul class="disclosures" id="disclosures"></ul>
+        <div id="loading" hidden><div class="skeleton" style="height:380px"></div><div class="skeleton"></div><div class="skeleton"></div></div>
         <div class="empty" id="emptyState">
-          <div class="big">◌</div>
-          <h3>Pick a preset or enter your shop</h3>
-          <p>Twin Block reads your shop's crowd on Qloo, then maps where that same taste lives in the next city.</p>
+          <svg viewBox="0 0 200 120" aria-hidden="true"><rect x="10" y="30" width="70" height="70" rx="10" fill="#e3e8d6"/><rect x="22" y="42" width="20" height="20" rx="3" fill="#225542"/><rect x="48" y="42" width="20" height="20" rx="3" fill="#225542"/><rect x="22" y="68" width="20" height="20" rx="3" fill="#225542"/><rect x="48" y="68" width="20" height="20" rx="3" fill="#d8ec8f"/><path d="M90 65 h20" stroke="#6c796b" stroke-width="3" stroke-dasharray="4 4"/><path d="M106 58 l8 7 -8 7" fill="none" stroke="#6c796b" stroke-width="3"/><rect x="120" y="30" width="70" height="70" rx="10" fill="#e3e8d6"/><rect x="132" y="42" width="20" height="20" rx="3" fill="#225542"/><rect x="158" y="42" width="20" height="20" rx="3" fill="#225542"/><rect x="132" y="68" width="20" height="20" rx="3" fill="#225542"/><rect x="158" y="68" width="20" height="20" rx="3" fill="#d8ec8f"/></svg>
+          <h3>Pick an example or enter your shop</h3>
+          <p>We read your shop's crowd on Qloo, then find its twin blocks in the next city.</p>
         </div>
       </div>
     </div>
   </section>
 
   <section id="proof" hidden>
-    <div class="proof-top">
+    <div class="page-top">
       <span class="eyebrow">TRUST IS A TESTABLE CLAIM.</span>
       <h2>Don't take our word for it.</h2>
-      <p>We hide a real chain's stores in a city it already operates in. Twin Block predicts where they are using only the taste
-      of places near the chain's stores in another city: never the brand, never its stores. Then we reveal the real stores.</p>
+      <p>We hide a real chain's stores in one city and ask Twin Block to find them, using only the taste of the neighbourhoods around that chain in a different city. It never sees the brand or its stores. Then we reveal where the stores really are.</p>
+    </div>
+    <div class="method">
+      <div><i>1</i><b>Learn</b>Find the chain's stores in city A and the places its customers also love nearby (brand removed).</div>
+      <div><i>2</i><b>Hide</b>All of the chain's stores in city B are held out. The signal never contains them.</div>
+      <div><i>3</i><b>Predict</b>Rank city B's map cells by Qloo taste. Take the top 5.</div>
+      <div><i>4</i><b>Score</b>A hit is a pick within 1 km of a real store. Compare with busy areas, random and a plain LLM.</div>
     </div>
     <div id="proofSummary" class="proof-summary"></div>
     <div class="proof-grid">
-      <article>
-        <h3>Results per chain</h3>
-        <div id="proofTable"></div>
-      </article>
+      <article><h3>Results per chain</h3><div id="proofTable"></div></article>
       <article>
         <h3>Run one live</h3>
         <form id="proveForm" novalidate>
@@ -100,36 +135,39 @@
             <div><label for="pTrain">Learn from</label><input id="pTrain" value="New York" maxlength="80"></div>
             <div><label for="pTest">Hide stores in</label><input id="pTest" value="Chicago" maxlength="80"></div>
           </div>
-          <button class="primary" type="submit">Run backtest →</button>
+          <button class="primary" type="submit" id="proveBtn">Run backtest →</button>
         </form>
-        <ol class="steps" id="proveSteps"></ol>
+        <ol class="steps" id="proveSteps" style="padding:10px 0 0"></ol>
         <div id="proveResult"></div>
         <div id="proveMap" class="map small" hidden role="img" aria-label="Hidden stores and predicted cells"></div>
-        <details><summary>Import your own benchmark JSON</summary>
+        <details class="more"><summary>Import your own benchmark JSON</summary>
           <label for="benchmark">Benchmark file</label><input type="file" id="benchmark" accept="application/json,.json">
-          <button id="runImport" type="button">Evaluate file</button>
+          <button id="runImport" class="btn small" type="button" style="margin-top:8px">Evaluate file</button>
           <p id="importStatus" role="status"></p>
           <a href="benchmark.example.json" download>Download input template ↗</a>
         </details>
       </article>
     </div>
-    <p class="hint">A hit means a pick within 1 km of a real store. That measures resemblance to where an operator actually chose to open, not profit. Chains are survivors; this tests fit to their decisions.</p>
+    <p class="hint" style="text-align:center;margin-top:18px">A hit measures resemblance to where an operator actually chose to open, not profit. Chains are survivors, so this tests fit to their decisions.</p>
   </section>
 
   <section id="receipts" hidden>
-    <div class="proof-top"><span class="eyebrow">EVERY NUMBER HAS A SOURCE.</span><h2>Receipts</h2><p>Every Qloo call from your last run: the tool, the endpoint, the exact parameters (never the key), its status and whether it came from cache.</p></div>
-    <div id="budget" class="chip"></div>
-    <div class="table-wrap"><table id="ledger"><caption class="sr">Qloo calls from the last run</caption><thead><tr><th scope="col">#</th><th scope="col">Tool</th><th scope="col">Endpoint</th><th scope="col">Parameters</th><th scope="col">Status</th><th scope="col">Results</th><th scope="col">Cache</th><th scope="col">ms</th></tr></thead><tbody></tbody></table></div>
+    <div class="page-top"><span class="eyebrow">EVERY NUMBER HAS A SOURCE.</span><h2>Receipts</h2><p>Every Qloo call from your last run: the tool, the endpoint, the exact parameters (never the key), its status, and whether it came from cache.</p></div>
+    <div class="card-box">
+      <div class="toolbar"><span class="chip" id="budget"></span><button class="btn small" id="downloadLedger" type="button">⤓ Download JSON</button></div>
+      <div class="toolgrid" id="toolgrid"></div>
+      <div class="table-wrap"><table id="ledger"><caption class="sr">Qloo calls from the last run</caption><thead><tr><th scope="col">#</th><th scope="col">Tool</th><th scope="col">Endpoint</th><th scope="col">Parameters</th><th scope="col">Status</th><th scope="col">Results</th><th scope="col">Cache</th><th scope="col">ms</th></tr></thead><tbody></tbody></table></div>
+    </div>
   </section>
 </main>
 
-<dialog id="brief" aria-labelledby="briefTitle">
-  <button class="close" id="closeBrief" aria-label="Close">×</button>
-  <div id="briefContent"></div>
-  <button class="primary" id="printBrief">Print / save PDF ↗</button>
+<dialog id="dialog" aria-labelledby="dialogTitle">
+  <button class="close" id="closeDialog" aria-label="Close">×</button>
+  <div id="dialogContent" class="brief"></div>
+  <div class="dialog-actions"><button class="primary" id="printDialog" type="button">Print / save PDF ↗</button></div>
 </dialog>
 
-<footer><b>twin block</b><span>Find the fit. Question the evidence.</span><a href="https://github.com/harshbpathak/Twin-Block" target="_blank" rel="noreferrer">Source (MIT) ↗</a><a href="https://docs.qloo.com/" target="_blank" rel="noreferrer">Built on Qloo ↗</a></footer>
+<footer><span><b>twin block</b> · Find the fit. Question the evidence.</span><span class="links"><a href="https://github.com/harshbpathak/Twin-Block" target="_blank" rel="noreferrer">Source (MIT) ↗</a><a href="https://docs.qloo.com/" target="_blank" rel="noreferrer">Built on Qloo ↗</a></span></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script type="module" src="app.js"></script>
 </body>

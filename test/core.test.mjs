@@ -123,3 +123,18 @@ test('prove it: brand and brand stores never enter the signal', async () => {
 test('browser copy of backtest engine matches the server copy', async () => {
   assert.equal(await readFile(new URL('../dist/backtest.mjs', import.meta.url), 'utf8'), await readFile(new URL('../backtest.mjs', import.meta.url), 'utf8'));
 });
+
+test('city finder: blank target city returns suggested cities, home city removed', async () => {
+  const r = await runTwin({ ...INPUT, targetCity: '' }, { run: newRun() });
+  assert.equal(r.mode, 'cities');
+  assert.ok(r.cities.length >= 3);
+  assert.ok(!r.cities.some(c => c.name === 'Austin'));
+});
+
+test('agent note and stability are derived from the result', async () => {
+  const r = await runTwin(INPUT, { run: newRun(), llm: async () => ({ status: 'not_run' }) });
+  assert.ok(r.note.length >= 3);
+  assert.ok(r.note.some(n => n.text.includes(r.areas[0].name)));
+  assert.equal(typeof r.stability.stable, 'boolean');
+  assert.equal(r.stability.winners.length, 4);
+});
