@@ -147,3 +147,12 @@ test('gap finder flags a taste the best area under-serves', async () => {
   assert.ok(!gaps.find(g => g.tag === 'Tacos').open);
   assert.ok(r.note.some(n => n.text.startsWith('Opening spotted')));
 });
+
+test('agent adapts: drops vibe words and relaxes price when they empty the results, and says so', async () => {
+  const emptyWhen = (path, p) => (p['filter.type'] === 'urn:heatmap' && p['signal.interests.tags']) || (p['filter.location'] && p['filter.price_level.min']);
+  const r = await runTwin(INPUT, { run: newRun({ mock: { emptyWhen } }), llm: async () => ({ status: 'not_run' }) });
+  assert.equal(r.status, 'degraded');
+  assert.ok(r.decisions.some(d => d.includes('without')));
+  assert.ok(r.decisions.some(d => d.includes('widened')));
+  assert.ok(r.areas.every(a => a.priceRelaxed && a.anchors.length));
+});

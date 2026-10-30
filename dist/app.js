@@ -170,7 +170,7 @@ function render(r, mode) {
   $('#resultTitle').textContent = `${r.shop.name} energy. ${r.input.targetCity} address.`;
   $('#modeChip').textContent = mode;
   $('#modeChip').className = 'chip ' + (state.recorded ? 'recorded' : r.status === 'ok' ? 'live' : 'warn');
-  $('#note').replaceChildren(h('h3', {}, "Agent's note"), ...(r.note || []).map(n => h('p', {}, n.text, cite(n.receipts))));
+  $('#note').replaceChildren(h('h3', {}, "Agent's note"), ...(r.note || []).map(n => h('p', {}, n.text, cite(n.receipts))), ...(r.decisions || []).map(d => h('p', { class: 'decision' }, '↻ ', d)));
   rescore();
   drawMap(r);
   renderPanels(r);
@@ -204,7 +204,7 @@ function areaCard(a, i) {
     h('div', { class: 'metrics' },
       metric('Taste match', `${a.cell.tastePct}/100`, 'vs. rest of city', a.cell.tastePct >= 80 ? 'good' : ''),
       metric('Crowding', crowd >= 8 ? 'High' : crowd >= 4 ? 'Medium' : 'Low', `${crowd} similar within 800 m`, crowd >= 8 ? 'bad' : crowd < 4 ? 'good' : ''),
-      metric('Price fit', pf.label === 'unknown' ? 'No signal' : pf.label === 'match' ? 'Match' : pf.label === 'info' ? money(pf.avg) : pf.label === 'pricier' ? 'Pricier' : 'Cheaper', pf.avg ? `nearby avg ${money(pf.avg)}` : 'no price data', pf.label === 'match' ? 'good' : pf.label === 'pricier' || pf.label === 'cheaper' ? 'bad' : ''),
+      metric('Price fit', pf.label === 'unknown' ? 'No signal' : pf.label === 'match' ? 'Match' : pf.label === 'info' ? money(pf.avg) : pf.label === 'pricier' ? 'Pricier' : 'Cheaper', pf.avg ? `nearby avg ${money(pf.avg)}${a.priceRelaxed ? ' · any price' : ''}` : 'no price data', pf.label === 'match' ? 'good' : pf.label === 'pricier' || pf.label === 'cheaper' ? 'bad' : ''),
       metric('Momentum', trend === 'rising' ? '↑ Rising' : trend === 'fading' ? '↓ Fading' : trend === 'steady' ? '→ Steady' : 'No signal', a.trend?.of ? `lead anchor, 6 mo` : 'trend data', trend === 'rising' ? 'good' : trend === 'fading' ? 'bad' : '')),
     a.shared?.length ? h('div', { class: 'card-row' }, h('b', {}, 'Shared taste'), h('span', { class: 'tags' }, ...a.shared.slice(0, 5).map(t => h('span', { class: 'tag light' }, t.name)))) : h('div', { class: 'card-row' }, h('b', {}, 'Shared taste'), STATUS[a.compareStatus] || 'n/a'),
     h('div', { class: 'card-row' }, h('b', {}, 'Anchors'), a.anchors.length ? a.anchors.map(x => `${x.name}${x.priceLevel ? ` (${money(x.priceLevel)})` : ''}`).join(' · ') : 'none returned'),

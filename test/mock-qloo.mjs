@@ -5,12 +5,13 @@ const DENVER = { lat: 39.74, lon: -104.99 };
 const HOODS = ['RiNo', 'Highland', 'Baker', 'Five Points', 'Capitol Hill', 'LoHi', 'Cherry Creek', 'Sloan Lake', 'Berkeley', 'Platt Park', 'Congress Park', 'Uptown', 'Jefferson Park', 'Sunnyside', 'Whittier', 'Cole', 'Washington Park', 'Union Station', 'Golden Triangle', 'Lincoln Park', 'Villa Park', 'Barnum', 'Athmar Park', 'Ruby Hill', 'University', 'Hale', 'Montclair', 'Park Hill', 'Clayton', 'Elyria'];
 const cell = (i, n = 6) => ({ lat: DENVER.lat + (Math.floor(i / n) - 2) * 0.02, lon: DENVER.lon + ((i % n) - 3) * 0.025 });
 
-export function mockFetch({ calls = [], fail = {}, ambiguous = false } = {}) {
+export function mockFetch({ calls = [], fail = {}, ambiguous = false, emptyWhen = () => false } = {}) {
   return async url => {
     const u = new URL(url);
     const p = Object.fromEntries(u.searchParams);
     calls.push({ path: u.pathname, p });
     if (fail[u.pathname] || fail[p['filter.type']]) return new Response('{"message":"boom"}', { status: fail[u.pathname] || fail[p['filter.type']] });
+    if (emptyWhen(u.pathname, p)) return new Response(JSON.stringify({ success: true, results: {} }), { status: 200 });
     const ok = results => new Response(JSON.stringify({ success: true, results }), { status: 200 });
     if (u.pathname === '/search') {
       if (p.types === 'urn:entity:brand') return ok({ entities: [{ entity_id: 'brand-0001', name: p.query }] });
