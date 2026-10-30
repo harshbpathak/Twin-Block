@@ -1,0 +1,12 @@
+[
+  { "brand": "Shake Shack", "train": "New York", "test": "Chicago" },
+  { "brand": "Sweetgreen", "train": "Washington", "test": "Boston" },
+  { "brand": "Blue Bottle Coffee", "train": "San Francisco", "test": "Los Angeles" },
+  { "brand": "Philz Coffee", "train": "San Francisco", "test": "Los Angeles" },
+  { "brand": "Joe & The Juice", "train": "New York", "test": "Los Angeles" },
+  { "brand": "Cava", "train": "Washington", "test": "New York" },
+  { "brand": "Tatte Bakery & Cafe", "train": "Boston", "test": "Washington" },
+  { "brand": "Torchy's Tacos", "train": "Austin", "test": "Dallas" },
+  { "brand": "Warby Parker", "train": "New York", "test": "Chicago" },
+  { "brand": "Lululemon", "train": "New York", "test": "Chicago" }
+]

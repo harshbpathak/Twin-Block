@@ -1,0 +1,7 @@
+[
+  { "id": "taco-shop", "label": "Taco shop", "icon": "🌮", "shop": "Veracruz All Natural", "homeCity": "Austin", "targetCity": "Denver", "price": 1, "vibes": "tacos, casual, outdoor", "for": "The everyday small owner" },
+  { "id": "hometown", "label": "Hometown BBQ", "icon": "⌂", "shop": "Pappy's Smokehouse", "homeCity": "St. Louis", "targetCity": "Atlanta", "price": 2, "vibes": "barbecue, family-friendly", "for": "A St. Louis favourite heads south" },
+  { "id": "comedy-club", "label": "Comedy club", "icon": "🎙", "shop": "Comedy Cellar", "homeCity": "New York", "targetCity": "Austin", "price": 2, "vibes": "comedy, late-night", "for": "Where does a comedy crowd live?" },
+  { "id": "sports-bar", "label": "Sports bar", "icon": "◉", "shop": "Barney's Beanery", "homeCity": "Los Angeles", "targetCity": "Chicago", "price": 2, "vibes": "sports bar, game day", "for": "Game-day crowd, new city" },
+  { "id": "music-venue", "label": "Live music venue", "icon": "♫", "shop": "Brooklyn Bowl", "homeCity": "New York", "targetCity": "Nashville", "price": 2, "vibes": "live music, bowling", "for": "Where should the next room go?" }
+]
