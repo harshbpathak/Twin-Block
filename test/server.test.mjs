@@ -21,10 +21,19 @@ test('blocks path traversal', async () => {
   for (const p of ['/..%2fserver.mjs', '/%2e%2e/package.json', '/..\\server.mjs']) assert.equal((await fetch(base + p)).status, 404, p);
 });
 
-test('health reports missing key honestly', async () => {
+test('without a key, health says SIMULATED, never live', async () => {
   const h = await (await fetch(base + '/api/health')).json();
-  assert.equal(h.status, 'degraded');
-  assert.equal(h.results.live, false);
+  assert.equal(h.status, 'simulated');
+  assert.equal(h.simulated, true);
+  assert.match(h.note, /SIMULATED/);
+});
+
+test('twin run without a key is fully flagged as simulated', async () => {
+  const res = await fetch(base + '/api/twin', { method: 'POST', body: JSON.stringify({ shop: 'Corner Tacos', homeCity: 'Austin', targetCity: 'Denver', price: 2 }) });
+  const result = (await res.text()).trim().split(String.fromCharCode(10)).map(l => JSON.parse(l)).at(-1);
+  assert.equal(result.simulated, true);
+  assert.equal(result.areas.length, 3);
+  assert.ok(result.ledger.every(r => r.simulated));
 });
 
 test('twin endpoint rejects personal data before any Qloo call', async () => {

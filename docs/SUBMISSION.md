@@ -77,6 +77,9 @@ Busy and right-for-you are different maps. The "Without Qloo" panel makes that v
 ## Built with
 Qloo Insights API · Node.js · JavaScript · Leaflet · OpenStreetMap · MCP
 
+## Status note (use only if the Qloo key has not arrived by submission)
+Our Qloo API key request is still pending. Until it arrives, the hosted demo runs in a clearly labelled **simulation mode**: invented places, randomly placed backtest stores, and a banner on every screen. It switches to live Qloo the moment the key is set, with no code change, so judges testing during the judging period may see live data. The Qloo integration (all 10 tools plus the deeper Insights parameters) is complete and covered by 35 tests against a Qloo-shaped mock. The real backtest numbers will appear in the Prove it tab once it runs live.
+
 ## Try it
 - Live demo: [[your Render URL]]
 - Code (MIT): https://github.com/harshbpathak/Twin-Block

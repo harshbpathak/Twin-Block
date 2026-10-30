@@ -55,7 +55,10 @@ document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click'
 async function loadHealth() {
   try {
     const r = await (await fetch('/api/health')).json();
-    state.live = r.status === 'ok';
+    state.simulated = r.status === 'simulated';
+    state.live = r.status === 'ok' || state.simulated;
+    $('#simStrip').hidden = !state.simulated;
+    if (state.simulated) { $('#health').textContent = '● Simulation · Qloo key pending'; $('#health').className = 'status down'; $('#health').title = r.note; return; }
     $('#health').textContent = state.live ? '● Live Qloo' : r.note?.includes('not set') ? '● Qloo key not set · recordings only' : '● Qloo degraded · recordings fallback';
     $('#health').className = 'status ' + (state.live ? 'live' : 'down');
     $('#health').title = r.note || `Checked ${new Date(r.checkedAt).toLocaleTimeString()}`;
@@ -168,8 +171,10 @@ function render(r, mode) {
   $('#traceSummary').textContent = `${new Set((r.steps || []).map(s => s.id)).size} steps · ${calls} Qloo calls · ${r.ledger?.filter(x => x.cache !== 'miss').length || 0} cached`;
   $('#trace').open = false;
   $('#resultTitle').textContent = `${r.shop.name} energy. ${r.input.targetCity} address.`;
-  $('#modeChip').textContent = mode;
-  $('#modeChip').className = 'chip ' + (state.recorded ? 'recorded' : r.status === 'ok' ? 'live' : 'warn');
+  $('#modeChip').textContent = r.simulated ? 'SIMULATED · NOT QLOO DATA' : mode;
+  $('#modeChip').className = 'chip ' + (r.simulated ? 'warn' : state.recorded ? 'recorded' : r.status === 'ok' ? 'live' : 'warn');
+  $('#simBanner').hidden = !r.simulated;
+  $('#map').classList.toggle('sim', Boolean(r.simulated));
   $('#note').replaceChildren(h('h3', {}, "Agent's note"), ...(r.note || []).map(n => h('p', {}, n.text, cite(n.receipts))), ...(r.decisions || []).map(d => h('p', { class: 'decision' }, '↻ ', d)));
   rescore();
   drawMap(r);
@@ -282,7 +287,7 @@ function focusArea(a) { $('#map').scrollIntoView({ behavior: 'smooth', block: 'c
 
 /* ---------- dialogs: lease brief + visit plan ---------- */
 const sec = (title, ...body) => h('div', { class: 'brief-section' }, h('h3', {}, title), ...body);
-function openDialog(...content) { $('#dialogContent').replaceChildren(...content); $('#dialog').showModal(); }
+function openDialog(...content) { if (state.result?.simulated) content.unshift(h('div', { class: 'sim-banner' }, '⚠ SIMULATED: invented places and scores, not Qloo data. Do not use for a real decision.')); $('#dialogContent').replaceChildren(...content); $('#dialog').showModal(); }
 function nameFor(id) {
   const r = state.result;
   if (id === r.shop.id) return r.shop.name;
@@ -438,9 +443,9 @@ $('#proveForm').addEventListener('submit', async e => {
   try {
     const r = await streamJSON('/api/backtest/run', { brand: $('#pBrand').value, train: $('#pTrain').value, test: $('#pTest').value }, s => stepRow($('#proveSteps'), s));
     state.ledger = r.ledger || state.ledger;
-    state.runs.unshift({ ...r, ledger: undefined }); renderRuns();
+    if (!r.simulated) { state.runs.unshift({ ...r, ledger: undefined }); renderRuns(); }
     if (r.status !== 'ok') { $('#proveResult').replaceChildren(h('p', {}, chip(r.status), ' ', r.message || '')); return; }
-    $('#proveResult').replaceChildren(h('div', { class: 'proof-summary', style: 'margin-top:12px' }, stat('Taste', pc(r.taste.precisionAtK), `${r.taste.hitCells}/${r.config.k} picks hit`, 'hero'), stat('Busy', pc(r.busy.precisionAtK), 'popularity'), stat('Random', pc(r.random.meanPrecisionAtK), 'mean of 500'), stat('LLM', pc(r.llm?.precisionAtK), r.llm ? 'upper bound' : 'not run')),
+    $('#proveResult').replaceChildren(r.simulated ? h('div', { class: 'sim-banner' }, '⚠ SIMULATED: stores are placed at random and the city is generated. These numbers are NOT evidence; they only show how the test works.') : '', h('div', { class: 'proof-summary', style: 'margin-top:12px' }, stat('Taste', pc(r.taste.precisionAtK), `${r.taste.hitCells}/${r.config.k} picks hit`, 'hero'), stat('Busy', pc(r.busy.precisionAtK), 'popularity'), stat('Random', pc(r.random.meanPrecisionAtK), 'mean of 500'), stat('LLM', pc(r.llm?.precisionAtK), r.llm ? 'upper bound' : 'not run')),
       h('p', { class: 'hint' }, `${r.counts.heldOut} hidden ${r.brand} stores in ${r.test}. Signal: places like ${r.signalSample.join(', ')} in ${r.train}. ${r.llmNote}`));
     state.proveMap = makeMap($('#proveMap'), state.proveMap);
     if (!state.proveMap) return;

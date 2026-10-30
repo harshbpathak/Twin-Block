@@ -64,8 +64,19 @@ The backtest also uses `filter.references_brand` to get real store lists and `fi
 - **Status labels everywhere**: `ok`, `empty` (no Qloo signal), `needs_input`, `partial`, `degraded` (reduced confidence), `error`. Missing data is shown as missing, never invented.
 - **Streaming agent steps** (NDJSON) so you see each tool call happen.
 - **Recorded fallback**: `npm run record` saves each preset's live run; if Qloo is down, presets load the recording, clearly labelled with its date.
-- **Tests**: `npm test` runs 30 tests against a mock Qloo. They cover the PII guard, cache, budget, error labels, all 10 tools, the end-to-end pipeline, the ambiguous-shop flow, heatmap failure, the city finder, the gap finder, adaptive decisions, scoring, the backtest leakage guard, the MCP server, server security headers, path traversal and basic accessibility checks.
+- **Tests**: `npm test` runs 35 tests against a mock Qloo. They cover the PII guard, cache, budget, error labels, all 10 tools, the end-to-end pipeline, the ambiguous-shop flow, heatmap failure, the city finder, the gap finder, adaptive decisions, scoring, the backtest leakage guard, the MCP server, server security headers, path traversal and basic accessibility checks.
 - Security headers and a CSP. Basic rate limiting.
+
+## Simulation mode (no Qloo key yet)
+
+If `QLOO_API_KEY` is not set, the app runs in **simulation mode** so the full workflow can still be clicked through:
+
+- A banner on every screen, a "SIMULATED · NOT QLOO DATA" chip on results, a watermark on the map, and a warning in every Lease Brief, Visit plan and Landlord pitch.
+- All places and neighbourhoods have invented names. The typed shop is shown as "Your shop (simulated)", so a real business is never shown with made-up data.
+- Simulated backtest stores are placed **uniformly at random**, so simulated backtest numbers carry no signal. They are never added to the results table.
+- Setting `QLOO_API_KEY` switches to live Qloo automatically, with no code change. `SIMULATION=off` disables simulation entirely.
+
+The simulator is in [lib/sim.mjs](lib/sim.mjs). Tests check that it is fully flagged and never uses real business names.
 
 ## Run it
 

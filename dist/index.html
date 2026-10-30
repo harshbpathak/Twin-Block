@@ -25,6 +25,7 @@
   <span class="status" id="health" role="status">● Checking Qloo…</span>
 </header>
 
+<div class="sim-strip" id="simStrip" role="note" hidden><b>SIMULATION MODE</b> · Our Qloo API key is pending, so every name, score and map here is generated to demonstrate the workflow. <b>None of it is Qloo data.</b> The app switches to live Qloo automatically when the key is set.</div>
 <main id="main">
   <section class="hero" id="intro">
     <div>
@@ -84,6 +85,7 @@
         <details class="trace" id="trace" open hidden><summary>Agent trace <small id="traceSummary"></small></summary><ol class="steps" id="steps"></ol></details>
         <div id="pick" class="pick" hidden></div>
         <div id="resultBlock" hidden>
+          <div class="sim-banner" id="simBanner" hidden>⚠ SIMULATED RESULT: invented places and scores, not Qloo data. Shown so you can try the workflow while the Qloo key is pending.</div>
           <div class="result-head">
             <div><span class="eyebrow">YOUR SHORTLIST</span><h2 id="resultTitle"></h2></div>
             <div class="head-actions">

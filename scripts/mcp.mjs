@@ -5,6 +5,7 @@ import { createInterface } from 'node:readline';
 import { createRun } from '../lib/qloo.mjs';
 import { runTwin } from '../lib/twin.mjs';
 import { proveChain } from '../lib/prove.mjs';
+import { runOptions } from '../lib/sim.mjs';
 
 const TOOLS = [
   {
@@ -23,7 +24,7 @@ function compact(r) {
   if (r.status === 'needs_input') return { status: r.status, message: r.message, candidates: r.candidates, cities: r.cities?.map(c => c.name) };
   if (!r.areas) return { status: r.status, message: r.message };
   return {
-    status: r.status, shop: r.shop.name, targetCity: r.input.targetCity,
+    status: r.status, simulated: r.simulated || undefined, shop: r.shop.name, targetCity: r.input.targetCity,
     note: r.note.map(n => n.text),
     areas: r.areas.map(a => ({ name: a.name, score: a.score, formula: a.formula, tastePct: a.cell.tastePct, sameCategoryWithin800m: a.sameCategoryCount, priceFit: a.priceFit.note, anchors: a.anchors.map(x => x.name), trend: a.trend.direction, receipts: [...new Set(a.receipts)] })),
     stable: r.stability.stable, busiestOverlap: r.withoutQloo.overlap, disclosures: r.disclosures,
@@ -32,7 +33,7 @@ function compact(r) {
 }
 
 async function call(name, args) {
-  const run = createRun();
+  const run = createRun(runOptions());
   if (name === 'twin_block_find') return compact(await runTwin(args, { run }));
   if (name === 'twin_block_prove') { const { ledger, ...r } = await proveChain(args, { run }); return r; }
   throw new Error(`Unknown tool ${name}`);
