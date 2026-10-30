@@ -209,6 +209,7 @@ function areaCard(a, i) {
     a.shared?.length ? h('div', { class: 'card-row' }, h('b', {}, 'Shared taste'), h('span', { class: 'tags' }, ...a.shared.slice(0, 5).map(t => h('span', { class: 'tag light' }, t.name)))) : h('div', { class: 'card-row' }, h('b', {}, 'Shared taste'), STATUS[a.compareStatus] || 'n/a'),
     h('div', { class: 'card-row' }, h('b', {}, 'Anchors'), a.anchors.length ? a.anchors.map(x => `${x.name}${x.priceLevel ? ` (${money(x.priceLevel)})` : ''}`).join(' · ') : 'none returned'),
     a.saturationWarning ? h('div', { class: 'warnline' }, '⚠ ', a.saturationWarning) : '',
+    a.gaps?.length ? h('div', { class: 'card-row' }, h('b', {}, 'Gaps'), h('span', { class: 'tags' }, ...a.gaps.map(g => h('span', { class: 'tag' + (g.open ? '' : ' light'), title: g.open ? 'Few nearby places serve this taste: a possible opening' : 'Already served nearby' }, `${g.open ? '✦ ' : ''}${g.tag}: ${g.count} nearby`)))) : '',
     h('div', { class: 'formula' }, `Twin score = ${a.formula}`),
     h('div', { class: 'card-actions' },
       h('button', { class: 'btn small dark', type: 'button', onclick: () => brief(a) }, 'Lease Brief ↗'),
@@ -250,11 +251,13 @@ const heatColor = p => (p > 85 ? '#1f6b4f' : p > 65 ? '#4f9a6e' : p > 40 ? '#a6c
 function drawMap(r) {
   state.map = makeMap($('#map'), state.map);
   if (!state.map) return;
-  state.layers = { pins: {} };
+  state.layers = { pins: {}, cells: [] };
   const pts = [];
   for (const c of r.map.cells) {
     pts.push([c.lat, c.lon]);
-    L.circle([c.lat, c.lon], { radius: r.map.boundary === 'neighborhood' ? 520 : 360, stroke: false, fillColor: heatColor(c.tastePct), fillOpacity: 0.55 }).bindTooltip(esc(`${c.name || c.id} · taste ${c.tastePct} · busy ${c.busyPct}`)).addTo(state.map);
+    const circle = L.circle([c.lat, c.lon], { radius: r.map.boundary === 'neighborhood' ? 520 : 360, stroke: false, fillColor: heatColor(state.colorBy === 'busy' ? c.busyPct : c.tastePct), fillOpacity: 0.55 });
+    state.layers.cells.push({ circle, c });
+    circle.bindTooltip(esc(`${c.name || c.id} · taste ${c.tastePct} · busy ${c.busyPct}`)).addTo(state.map);
   }
   for (const b of r.withoutQloo.busiest) L.circleMarker([b.lat, b.lon], { radius: 11, color: '#b65a2c', weight: 2, fill: false, dashArray: '3 3' }).bindTooltip(esc(`Busiest, no taste signal: ${b.name || b.id}`)).addTo(state.map);
   r.areas.forEach((a, i) => {
@@ -263,6 +266,17 @@ function drawMap(r) {
     for (const x of a.anchors) if (Number.isFinite(x.lat)) L.circleMarker([x.lat, x.lon], { radius: 4, color: '#16332a', weight: 1, fillOpacity: 1 }).bindTooltip(esc(`Anchor: ${x.name}`)).addTo(state.map);
   });
   if (pts.length) state.map.fitBounds(pts, { padding: [24, 24] });
+  const Toggle = L.Control.extend({ onAdd() {
+    const box = L.DomUtil.create('div', 'map-toggle');
+    for (const [k, label] of [['taste', 'Taste (Qloo)'], ['busy', 'Busy only']]) {
+      const b = L.DomUtil.create('button', state.colorBy === k || (!state.colorBy && k === 'taste') ? 'on' : '', box);
+      b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(b.className === 'on'));
+      L.DomEvent.on(b, 'click', e => { L.DomEvent.stop(e); state.colorBy = k; box.querySelectorAll('button').forEach(x => { x.className = x === b ? 'on' : ''; x.setAttribute('aria-pressed', String(x === b)); }); state.layers.cells.forEach(({ circle, c }) => circle.setStyle({ fillColor: heatColor(k === 'busy' ? c.busyPct : c.tastePct) })); });
+    }
+    L.DomEvent.disableClickPropagation(box);
+    return box;
+  } });
+  new Toggle({ position: 'topright' }).addTo(state.map);
 }
 function focusArea(a) { $('#map').scrollIntoView({ behavior: 'smooth', block: 'center' }); state.map?.flyTo([a.cell.lat, a.cell.lon], 14, { duration: 0.6 }); state.layers.pins?.[a.name]?.openTooltip(); }
 
@@ -382,9 +396,33 @@ const pc = v => (v === null || v === undefined ? '—' : `${Math.round(v * 100)}
 const stat = (label, value, sub, cls = '') => h('div', { class: `stat ${cls}` }, h('small', {}, label), h('b', {}, value), h('span', {}, sub));
 let proofData = null;
 async function getProof() { if (!proofData) { try { proofData = await (await fetch('/api/backtest')).json(); } catch { proofData = { status: 'error', message: 'Could not load.' }; } } return proofData; }
+state.runs = [];
+async function chainList() {
+  let chains = [];
+  try { chains = await (await fetch('/api/chains')).json(); } catch {}
+  return h('div', {}, h('p', { class: 'hint' }, 'Pick a chain to run it live (about 6 to 8 Qloo calls each). Results collect below.'),
+    h('div', { class: 'table-wrap' }, h('table', {}, h('thead', {}, h('tr', {}, ...['Chain', 'Learn → hide', ''].map(t => h('th', { scope: 'col' }, t)))),
+      h('tbody', {}, ...chains.map(c => h('tr', {}, h('td', {}, h('b', {}, c.brand)), h('td', {}, `${c.train} → ${c.test}`), h('td', {}, h('button', { class: 'btn small', type: 'button', onclick: () => { $('#pBrand').value = c.brand; $('#pTrain').value = c.train; $('#pTest').value = c.test; $('#proveForm').requestSubmit(); } }, 'Run live ▶'))))))));
+}
+function renderRuns() {
+  const ok = state.runs.filter(r => r.status === 'ok');
+  if (!ok.length) return;
+  const mean = f => ok.reduce((s, r) => s + f(r), 0) / ok.length;
+  $('#proofSummary').replaceChildren(stat('Taste (Qloo)', pc(mean(r => r.taste.precisionAtK)), `your ${ok.length} live run${ok.length > 1 ? 's' : ''}`, 'hero'), stat('Busy areas', pc(mean(r => r.busy.precisionAtK)), 'popularity only'), stat('Random', pc(mean(r => r.random.meanPrecisionAtK)), '500 seeded draws'), stat('Taste beat busy', `${ok.filter(r => r.taste.precisionAtK > r.busy.precisionAtK).length}/${ok.length}`, 'chains, this session'));
+  let box = $('#sessionRuns');
+  if (!box) { box = h('div', { id: 'sessionRuns' }); $('#proofTable').prepend(box); }
+  box.replaceChildren(h('h4', {}, 'Your live runs'), runTable(state.runs));
+}
+function runTable(rows) {
+  return h('div', { class: 'table-wrap' }, h('table', {}, h('thead', {}, h('tr', {}, ...['Chain', 'Learn → hide', 'Hidden', 'Taste', 'Busy', 'Random', 'LLM'].map(t => h('th', { scope: 'col' }, t)))),
+    h('tbody', {}, ...rows.map(r => h('tr', {}, h('td', {}, h('b', {}, r.brand)), h('td', {}, `${r.train} → ${r.test}`), ...(r.status === 'ok' ? [h('td', {}, r.counts.heldOut), h('td', { class: r.taste.precisionAtK > r.busy.precisionAtK ? 'win' : '' }, pc(r.taste.precisionAtK)), h('td', {}, pc(r.busy.precisionAtK)), h('td', {}, pc(r.random.meanPrecisionAtK)), h('td', {}, pc(r.llm?.precisionAtK))] : [h('td', { colspan: 5 }, chip(r.status), ' ', r.message || '')]))))));
+}
+let proofRendered = false;
 async function loadProof() {
+  if (proofRendered) return; proofRendered = true;
   const d = await getProof();
-  if (d.status !== 'ok') { $('#proofSummary').replaceChildren(h('div', { class: 'stat wide' }, h('small', {}, 'Precomputed results'), h('b', {}, 'Not run yet'), h('span', {}, 'Run a chain live on the right, or run `npm run prove` on the server.'))); $('#proofTable').replaceChildren(h('p', { class: 'hint' }, 'No precomputed results yet.')); return; }
+  if (d.status !== 'ok') {
+    $('#proofTable').replaceChildren(await chainList()); $('#proofSummary').replaceChildren(h('div', { class: 'stat wide' }, h('small', {}, 'Precomputed results'), h('b', {}, 'Not run yet'), h('span', {}, 'Run a chain live on the right, or run `npm run prove` on the server.'))); return; }
   const s = d.summary;
   $('#proofSummary').replaceChildren(stat('Taste (Qloo)', pc(s.taste), 'mean hits in top 5', 'hero'), stat('Busy areas', pc(s.busy), 'popularity only'), stat('Random', pc(s.random), '500 seeded draws'), stat('Plain LLM', pc(s.llm), s.llm === null ? 'not run' : 'has memorised stores'), stat('Taste beat busy', `${s.tasteWins}/${s.chains}`, `chains${s.ties ? ` · ${s.ties} ties` : ''}`));
   $('#proofTable').replaceChildren(h('div', { class: 'table-wrap' }, h('table', {}, h('thead', {}, h('tr', {}, ...['Chain', 'Learn → hide', 'Hidden', 'Taste', 'Busy', 'Random', 'LLM'].map(t => h('th', { scope: 'col' }, t)))),
@@ -400,6 +438,7 @@ $('#proveForm').addEventListener('submit', async e => {
   try {
     const r = await streamJSON('/api/backtest/run', { brand: $('#pBrand').value, train: $('#pTrain').value, test: $('#pTest').value }, s => stepRow($('#proveSteps'), s));
     state.ledger = r.ledger || state.ledger;
+    state.runs.unshift({ ...r, ledger: undefined }); renderRuns();
     if (r.status !== 'ok') { $('#proveResult').replaceChildren(h('p', {}, chip(r.status), ' ', r.message || '')); return; }
     $('#proveResult').replaceChildren(h('div', { class: 'proof-summary', style: 'margin-top:12px' }, stat('Taste', pc(r.taste.precisionAtK), `${r.taste.hitCells}/${r.config.k} picks hit`, 'hero'), stat('Busy', pc(r.busy.precisionAtK), 'popularity'), stat('Random', pc(r.random.meanPrecisionAtK), 'mean of 500'), stat('LLM', pc(r.llm?.precisionAtK), r.llm ? 'upper bound' : 'not run')),
       h('p', { class: 'hint' }, `${r.counts.heldOut} hidden ${r.brand} stores in ${r.test}. Signal: places like ${r.signalSample.join(', ')} in ${r.train}. ${r.llmNote}`));

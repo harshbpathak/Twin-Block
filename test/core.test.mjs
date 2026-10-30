@@ -138,3 +138,12 @@ test('agent note and stability are derived from the result', async () => {
   assert.equal(typeof r.stability.stable, 'boolean');
   assert.equal(r.stability.winners.length, 4);
 });
+
+test('gap finder flags a taste the best area under-serves', async () => {
+  const r = await runTwin(INPUT, { run: newRun(), llm: async () => ({ status: 'not_run' }) });
+  const gaps = r.areas[0].gaps;
+  assert.equal(gaps.length, 2);
+  assert.ok(gaps.find(g => g.tag === 'Patio').open);
+  assert.ok(!gaps.find(g => g.tag === 'Tacos').open);
+  assert.ok(r.note.some(n => n.text.startsWith('Opening spotted')));
+});

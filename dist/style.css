@@ -245,3 +245,8 @@ footer b{color:var(--ink)}footer .links{display:flex;gap:16px}
 .saved a{flex:1;text-decoration:none;color:var(--ink);min-width:0}.saved b{display:block;font-size:13px}.saved span{display:block;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .saved .x{border:0;background:none;font-size:18px;color:var(--muted)}
 textarea{resize:vertical}
+
+.map-toggle{display:flex;background:#fff;border-radius:10px;box-shadow:0 2px 8px #0002;padding:3px;gap:2px}
+.map-toggle button{border:0;background:none;border-radius:8px;padding:6px 10px;font:600 12px var(--body);color:var(--muted)}
+.map-toggle button.on{background:var(--ink);color:var(--lime)}
+#sessionRuns{margin-bottom:18px}#sessionRuns h4{margin:0 0 6px;font:600 13px var(--head)}

@@ -22,7 +22,7 @@ export function mockFetch({ calls = [], fail = {}, ambiguous = false } = {}) {
     if (u.pathname === '/v2/analysis/compare') return ok({ tags: [{ tag_id: 'urn:tag:x:1', name: 'Street Food', query: { a: { affinity: 0.9 }, b: { affinity: 0.8 } } }, { tag_id: 'urn:tag:x:2', name: 'Craft Beer', query: { a: { affinity: 0.7 }, b: { affinity: 0.6 } } }] });
     if (u.pathname === '/v2/trending') return ok({ trending: [1, 2, 3, 4, 5, 6].map(v => ({ population_percentile: v / 10 })) });
     const type = p['filter.type'];
-    if (type === 'urn:tag') return ok({ tags: [{ id: 'urn:tag:a', name: 'Tacos', query: { affinity: 0.9 } }, { id: 'urn:tag:b', name: 'Patio', query: { affinity: 0.7 } }] });
+    if (type === 'urn:tag') return ok({ tags: [{ id: 'urn:tag:genre:place:restaurant:tacos', name: 'Tacos', query: { affinity: 0.9 } }, { id: 'urn:tag:amenity:place:patio', name: 'Patio', query: { affinity: 0.7 } }] });
     if (type === 'urn:demographics') return ok({ demographics: [{ entity_id: SHOP.entity_id, query: { age: { '25_to_29': 0.4, '24_and_younger': 0.2 }, gender: { female: 0.1 } } }] });
     if (type === 'urn:heatmap') {
       return ok({ heatmap: Array.from({ length: 30 }, (_, i) => { const c = cell(i); return { location: { latitude: c.lat, longitude: c.lon, geohash: `gh${i}`, ...(p['output.heatmap.boundary'] === 'neighborhood' ? { name: HOODS[i] } : {}) }, query: { affinity: 1 - i / 30, popularity: (i % 7) / 7 } }; }) });
@@ -35,7 +35,7 @@ export function mockFetch({ calls = [], fail = {}, ambiguous = false } = {}) {
         const list = test ? [0, 1, 2, 7, 13].map(i => ({ entity_id: `store-t${i}`, name: 'Shake Shack', location: { lat: cell(i).lat + 0.001, lon: cell(i).lon } })) : [0, 1, 2, 3].map(i => ({ entity_id: `store-a${i}`, name: 'Shake Shack', location: { lat: 40.7 + i * 0.01, lon: -74 } }));
         return ok({ entities: list });
       }
-      if (p['filter.tags']) return ok({ entities: Array.from({ length: 9 }, (_, i) => ({ entity_id: `same-${i}`, name: `Taqueria ${i}` })) });
+      if (p['filter.tags']) return ok({ entities: Array.from({ length: /patio/.test(p['filter.tags']) ? 2 : 9 }, (_, i) => ({ entity_id: `same-${i}`, name: `Taqueria ${i}` })) });
       if (p['filter.results.entities']) return ok({ entities: p['filter.results.entities'].split(',').map((id, i) => ({ entity_id: id, name: `Ranked ${i}`, query: { affinity: 1 - i / 20 } })) });
       const base = p['filter.location'] ? DENVER : { lat: 30.26, lon: -97.74 };
       const exclude = new Set((p['filter.exclude.entities'] || '').split(','));
