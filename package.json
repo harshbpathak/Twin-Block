@@ -1,1 +1,17 @@
-{"name":"twin-block","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test backtest.test.mjs"}}
+{
+  "name": "twin-block",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Taste-first site selection for small businesses, built on Qloo's taste graph, with a live real-store backtest.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --env-file-if-exists=.env --watch server.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "spike": "node --env-file-if-exists=.env scripts/spike.mjs",
+    "prove": "node --env-file-if-exists=.env scripts/prove.mjs",
+    "record": "node --env-file-if-exists=.env scripts/record.mjs"
+  }
+}
